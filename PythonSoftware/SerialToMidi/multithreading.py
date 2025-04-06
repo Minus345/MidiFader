@@ -19,6 +19,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from PythonSoftware.SerialToMidi import serialInput
+
+
 class WorkerSignals(QObject):
     """Signals from a running worker thread.
 
@@ -45,18 +48,25 @@ class Worker(QRunnable):
     :param kwargs: Keywords to pass to the callback function
     """
 
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, ser):
         super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
+        self.ser = ser
         self.signals = WorkerSignals()
-        # Add the callback to our kwargs
-        self.kwargs["progress_callback"] = self.signals.progress
+        self.is_killed = False
 
     @pyqtSlot()
     def run(self):
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-        finally:
-            self.signals.finished.emit()
+         while True:
+            #time.sleep(1)
+            line = str(serialInput.getLine(self.ser))
+            self.signals.progress.emit(line)
+
+            if self.is_killed:
+                serialInput.killSerial(self.ser)
+                break
+
+     #self.signals.finished.emit()
+
+    def kill(self):
+        print("killed")
+        self.is_killed = True
