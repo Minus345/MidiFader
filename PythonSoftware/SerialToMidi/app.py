@@ -1,15 +1,8 @@
 import sys
-import time
-import traceback
-from multiprocessing.pool import worker
-
 from PyQt6.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot, QThreadPool
-
 import serialInput
-
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QLabel, QVBoxLayout, QWidget, \
     QButtonGroup
-
 from PythonSoftware.SerialToMidi.multithreading import Worker
 
 

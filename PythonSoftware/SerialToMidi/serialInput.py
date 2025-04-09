@@ -1,7 +1,7 @@
 #print("starting")
 import serial
 def setup():
-    ser = serial.Serial('COM4')
+    ser = serial.Serial('COM3')
     print(ser.name)
     return ser
 
