@@ -1,4 +1,6 @@
 import sys
+from tokenize import String
+
 from PyQt6.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot, QThreadPool
 import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QLabel, QVBoxLayout, QWidget, \
@@ -47,6 +49,8 @@ class MainWindow(QMainWindow):
 
     #Verbindung zu Signals für das GUI
     def progress_fn(self, n):
+        n = n.replace("b'","")
+        n = n.replace("\\r\\n'","")
         self.dataFromFader.setText(str(n))
 
     def thread_complete(self):
