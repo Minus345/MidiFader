@@ -1,8 +1,12 @@
-#print("starting")
 import serial
-def setup():
-    ser = serial.Serial('COM3')
-    print(ser.name)
+
+def setup(comPort):
+    try:
+        ser = serial.Serial(comPort)
+        print(ser.name)
+    except serial.SerialException as e:
+        print(e)
+        ser = False
     return ser
 
 def getLine(ser):
