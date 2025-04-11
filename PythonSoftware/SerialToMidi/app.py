@@ -43,20 +43,27 @@ class MainWindow(QMainWindow):
         # creates 8 Labels horizontally
         self.labelList = [QLabel] * 8
         self.buttonList = [QPushButton] * 8
-        self.layoutList = [QHBoxLayout] * 8
+
+        self.layoutList = [QVBoxLayout] * 8
+        self.singleFaderUiElementList = [QWidget] * 8
 
         self.layout2 = QHBoxLayout()
 
         for x in range(8):
-            self.layoutList[x] = QHBoxLayout() ## <--------- Weiter machen
+            self.layoutList[x] = QVBoxLayout()
 
-            # label
+            # label - name
             self.labelList[x] = QLabel(str(x))
-            self.layout2.addWidget(self.labelList[x])
+            self.layoutList[x].addWidget(self.labelList[x])
 
             # button
             self.buttonList[x] = QPushButton(str(x))
-            self.layout2.addWidget(self.buttonList[x])
+            self.layoutList[x].addWidget(self.buttonList[x])
+
+            # make for every fader a single Widget with layout
+            self.singleFaderUiElementList[x] = QWidget()
+            self.singleFaderUiElementList[x].setLayout(self.layoutList[x])
+            self.layout2.addWidget(self.singleFaderUiElementList[x])
 
         self.faderUiElemet = QWidget()
         self.faderUiElemet.setLayout(self.layout2)
