@@ -11,7 +11,6 @@ def setup(comPort):
 
 def getLine(ser):
     line = ser.readline()
-    print(line)
     return line
 
 def killSerial(ser):

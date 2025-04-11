@@ -1,20 +1,19 @@
 import sys
 from multiprocessing.pool import worker
-from tokenize import String
 
 from PyQt6.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot, QThreadPool
-from serial.tools.list_ports_linux import comports
 
 import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QLabel, QVBoxLayout, QWidget, \
     QButtonGroup, QLineEdit, QHBoxLayout
+
+from PythonSoftware.SerialToMidi.faderClass import Fader
 from PythonSoftware.SerialToMidi.multithreading import Worker
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
 
         self.worker = None
         self.setWindowTitle("Serial To Midi")
@@ -27,7 +26,7 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(self.startButton)
 
         self.comInput = QLineEdit()
-        self.comPort = "Com4" # default for my testing
+        self.comPort = "Com4"  # default for my testing
         self.comInput.setPlaceholderText("Input Com Port")
         self.comInput.textChanged.connect(self.comInputChanged)
         self.layout.addWidget(self.comInput)
@@ -41,36 +40,19 @@ class MainWindow(QMainWindow):
 
         # ----- Fader ----------
         # creates 8 Labels horizontally
-        self.labelList = [QLabel] * 8
-        self.buttonList = [QPushButton] * 8
-
-        self.layoutList = [QVBoxLayout] * 8
-        self.singleFaderUiElementList = [QWidget] * 8
+        self.faderList = [Fader] * 12
 
         self.layout2 = QHBoxLayout()
 
-        for x in range(8):
-            self.layoutList[x] = QVBoxLayout()
+        for x in range(12):
+            self.faderList[x] = Fader(x, self.layout2)
 
-            # label - name
-            self.labelList[x] = QLabel(str(x))
-            self.layoutList[x].addWidget(self.labelList[x])
-
-            # button
-            self.buttonList[x] = QPushButton(str(x))
-            self.layoutList[x].addWidget(self.buttonList[x])
-
-            # make for every fader a single Widget with layout
-            self.singleFaderUiElementList[x] = QWidget()
-            self.singleFaderUiElementList[x].setLayout(self.layoutList[x])
-            self.layout2.addWidget(self.singleFaderUiElementList[x])
-
-        self.faderUiElemet = QWidget()
-        self.faderUiElemet.setLayout(self.layout2)
+        self.faderUiElement = QWidget()
+        self.faderUiElement.setLayout(self.layout2)
 
         # -----------------------
 
-        self.layout.addWidget(self.faderUiElemet)
+        self.layout.addWidget(self.faderUiElement)
 
         self.maineUiElement = QWidget()
         self.maineUiElement.setLayout(self.layout)
@@ -110,7 +92,13 @@ class MainWindow(QMainWindow):
     def progress_fn(self, n):
         n = n.replace("b'", "")
         n = n.replace("\\r\\n'", "")
-        self.dataFromFader.setText(str(n))
+
+        # splits the string and sends it to the display labels
+        split = n.split("|")
+        if len(split) >= 12:
+            for x in range(12):
+                self.faderList[x].updateData(round(int(split[x]), -1)) # runden auf nächsten 10
+                self.dataFromFader.setText(str(n))
 
     def thread_complete(self):
         print("THREAD COMPLETE!")
