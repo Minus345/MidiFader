@@ -1,25 +1,11 @@
-import sys
-import time
-import traceback
-
 from PyQt6.QtCore import (
     QObject,
     QRunnable,
-    QThreadPool,
-    QTimer,
     pyqtSignal,
     pyqtSlot,
 )
-from PyQt6.QtWidgets import (
-    QApplication,
-    QLabel,
-    QMainWindow,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
 
-from PythonSoftware.SerialToMidi import serialInput
+from PythonSoftware.SerialToMidi.SerialLink import serialInput
 
 
 class WorkerSignals(QObject):

@@ -1,12 +1,13 @@
 import sys
-from multiprocessing.pool import worker
 
-from PyQt6.QtCore import QObject, pyqtSignal, QRunnable, pyqtSlot, QThreadPool
+from PyQt6.QtCore import QThreadPool
 
-import serialInput
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QRadioButton, QLabel, QVBoxLayout, QWidget, \
-    QButtonGroup, QLineEdit, QHBoxLayout
+from PythonSoftware.SerialToMidi import midi
+from PythonSoftware.SerialToMidi.SerialLink import serialInput
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, \
+    QLineEdit, QHBoxLayout, QComboBox
 
+from PythonSoftware.SerialToMidi.SerialLink.serialPortDetection import serial_ports
 from PythonSoftware.SerialToMidi.faderClass import Fader
 from PythonSoftware.SerialToMidi.multithreading import Worker
 
@@ -21,20 +22,46 @@ class MainWindow(QMainWindow):
 
         self.layout = QVBoxLayout()
 
+        # Info Lable
+        self.infoLabel = QLabel("Select Com Port")
+        self.layout.addWidget(self.infoLabel)
+
+        # Midi Port Selection
+        self.setComPort = QComboBox()
+        self.setComPort.addItems(serial_ports())
+        self.setComPort.currentTextChanged.connect(self.setMidiPortSelection)
+        self.layout.addWidget(self.setComPort)
+
+        # Start Button
         self.startButton = QPushButton("Start Encoding")
         self.startButton.clicked.connect(self.startButtonPressed)
         self.layout.addWidget(self.startButton)
 
-        self.comInput = QLineEdit()
-        self.comPort = "Com4"  # default for my testing
-        self.comInput.setPlaceholderText("Input Com Port")
-        self.comInput.textChanged.connect(self.comInputChanged)
-        self.layout.addWidget(self.comInput)
 
-        self.stopButton = QPushButton("Stop")
+        # Stop Button
+        self.stopButton = QPushButton("Stop Encoding")
         self.stopButton.clicked.connect(self.stopButtonPress)
         self.layout.addWidget(self.stopButton)
 
+        # Spacing
+        self.spacing = QLabel("---")
+        self.layout.addWidget(self.spacing)
+
+        # Midi Info
+        self.midiInfo = QLabel("Select Midi Port")
+        self.layout.addWidget(self.midiInfo)
+
+        # Midi Port Selection
+        self.setMidiPort = QComboBox()
+        self.setMidiPort.addItems(midi.getOpenMidiPort())
+        self.layout.addWidget(self.setMidiPort)
+
+        # Start Midi
+        self.startMidi = QPushButton("Start Midi")
+        self.startMidi.clicked.connect(self.startMidiClicked)
+        self.layout.addWidget(self.startMidi)
+
+        # Input Debug Lable
         self.dataFromFader = QLabel("Input")
         self.layout.addWidget(self.dataFromFader)
 
@@ -76,8 +103,7 @@ class MainWindow(QMainWindow):
         self.worker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(self.worker)
 
-    # Input for the Com Port (Windows)
-    def comInputChanged(self, s):
+    def setMidiPortSelection(self, s):
         print(s)
         self.comPort = s
 
@@ -97,11 +123,14 @@ class MainWindow(QMainWindow):
         split = n.split("|")
         if len(split) >= 12:
             for x in range(12):
-                self.faderList[x].updateData(round(int(split[x]), -1)) # runden auf nächsten 10
+                self.faderList[x].updateData(round(int(split[x]), -1))  # runden auf nächsten 10
                 self.dataFromFader.setText(str(n))
 
     def thread_complete(self):
         print("THREAD COMPLETE!")
+
+    def startMidiClicked(self):
+        print("Starting Midi")
 
 
 app = QApplication(sys.argv)
