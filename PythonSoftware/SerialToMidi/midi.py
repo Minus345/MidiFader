@@ -7,7 +7,8 @@ class Midi:
         self.running = True
 
     def sendMid(self,note,velocity):
-        self.port.send(note,velocity)
+        msg = mido.Message('note_on', note=note, velocity=velocity)
+        self.port.send(msg)
 
     def closePort(self):
        self.port.close()

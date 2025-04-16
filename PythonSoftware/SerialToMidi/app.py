@@ -3,7 +3,6 @@ import sys
 from PyQt6.QtCore import QThreadPool
 
 from PythonSoftware.SerialToMidi import midi
-from PythonSoftware.SerialToMidi.RunningThreads.midiRunner import MidiWorker
 from PythonSoftware.SerialToMidi.SerialLink import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, \
     QHBoxLayout, QComboBox
@@ -21,7 +20,6 @@ class MainWindow(QMainWindow):
 
         # globale Variablen
         self.serialWorker = None
-        self.midiWorker = None
         self.midiPort = None
         self.midi = None
 
@@ -34,25 +32,11 @@ class MainWindow(QMainWindow):
         self.infoLabel = QLabel("Select Com Port")
         self.layout.addWidget(self.infoLabel)
 
-        # Midi Port Selection
+        # Com Port Selection
         self.setComPort = QComboBox()
         self.setComPort.addItems(serial_ports())
         self.setComPort.currentTextChanged.connect(self.setMidiPortSelection)
         self.layout.addWidget(self.setComPort)
-
-        # Start Button
-        self.startButton = QPushButton("Start Encoding")
-        self.startButton.clicked.connect(self.startButtonPressed)
-        self.layout.addWidget(self.startButton)
-
-        # Stop Button
-        self.stopButton = QPushButton("Stop Encoding")
-        self.stopButton.clicked.connect(self.stopButtonPress)
-        self.layout.addWidget(self.stopButton)
-
-        # Spacing
-        self.spacing = QLabel("---")
-        self.layout.addWidget(self.spacing)
 
         # Midi Info
         self.midiInfo = QLabel("Select Midi Port")
@@ -64,14 +48,15 @@ class MainWindow(QMainWindow):
         self.setMidiPort.currentTextChanged.connect(self.midiPortChanged)
         self.layout.addWidget(self.setMidiPort)
 
-        # Start Midi
-        self.startMidi = QPushButton("Start Midi")
-        self.startMidi.clicked.connect(self.startMidiClicked)
-        self.layout.addWidget(self.startMidi)
+        # Start Button
+        self.startButton = QPushButton("Start Encoding")
+        self.startButton.clicked.connect(self.startButtonPressed)
+        self.layout.addWidget(self.startButton)
 
-        self.stopMidi = QPushButton("Stop Midi")
-        self.stopMidi.clicked.connect(self.stopMidiButton)
-        self.layout.addWidget(self.stopMidi)
+        # Stop Button
+        self.stopButton = QPushButton("Stop Encoding")
+        self.stopButton.clicked.connect(self.stopButtonPress)
+        self.layout.addWidget(self.stopButton)
 
         # Input Debug Lable
         self.dataFromFader = QLabel("Input")
@@ -102,17 +87,23 @@ class MainWindow(QMainWindow):
         thread_count = self.threadpool.maxThreadCount()
         print(f"Multithreading with maximum {thread_count} threads")
 
-# --------------- multi threading -----------------
+    # --------------- multi threading -----------------
     # Starts the Serial Connection
     def startButtonPressed(self):
-
         # If this returns False the Serial Port is not found
         usedSetup = serialInput.setup(self.comPort)
 
         if usedSetup is False:
             return
 
-        self.serialWorker = Worker(usedSetup)
+        if self.midiPort is None:
+            print("No Midi port defined")
+            return
+
+        print("Starting Midi")
+        self.midi = Midi(self.midiPort)
+
+        self.serialWorker = Worker(usedSetup, self.midi, self.faderList)
         self.serialWorker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(self.serialWorker)
 
@@ -123,44 +114,12 @@ class MainWindow(QMainWindow):
         else:
             print("No thread started")
 
-     # Verbindung zu Signals für das GUI
-    def progress_fn(self, n):
-        n = n.replace("b'", "")
-        n = n.replace("\\r\\n'", "")
+    # Verbindung zu Signals für das GUI
+    def progress_fn(self, split):
+        for x in range(12):
+            self.faderList[x].updateData(round(int(split[x]), -1))  # runden auf nächsten 10
 
-        # splits the string and sends it to the display labels
-        split = n.split("|")
-        if len(split) >= 12:
-            for x in range(12):
-                self.faderList[x].updateData(round(int(split[x]), -1))  # runden auf nächsten 10
-                self.dataFromFader.setText(str(n))
-
-    # Starting Midi Thread
-    def startMidiClicked(self):
-        if self.midiPort is None:
-            print("No Midi port defined")
-            return
-
-        print("Starting Midi")
-        self.midi = Midi(self.midiPort)
-
-        self.midiWorker = MidiWorker()
-        self.midiWorker.signals.progress.connect(self.progressFnMidi)
-        self.threadpool.start(self.midiWorker)
-
-    # Stopps Midi Thread
-    def stopMidiButton(self):
-        if self.midiWorker:
-            self.midiWorker.kill()
-            self.midi.closePort()
-        else:
-            print("No thread started")
-
-    # Midi Thread Connection zu GUI
-    def progressFnMidi(self, n):
-        print(n)
-
-# ------------- Others -----------------------
+    # ------------- Others -----------------------
 
     def setMidiPortSelection(self, s):
         print(s)
@@ -171,8 +130,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.stopButtonPress()
-        self.stopMidiButton()
         print("close")
+
 
 app = QApplication(sys.argv)
 window = MainWindow()
