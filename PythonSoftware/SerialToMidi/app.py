@@ -3,20 +3,28 @@ import sys
 from PyQt6.QtCore import QThreadPool
 
 from PythonSoftware.SerialToMidi import midi
+from PythonSoftware.SerialToMidi.RunningThreads.midiRunner import MidiWorker
 from PythonSoftware.SerialToMidi.SerialLink import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, \
-    QLineEdit, QHBoxLayout, QComboBox
+    QHBoxLayout, QComboBox
 
 from PythonSoftware.SerialToMidi.SerialLink.serialPortDetection import serial_ports
 from PythonSoftware.SerialToMidi.faderClass import Fader
-from PythonSoftware.SerialToMidi.multithreading import Worker
+from PythonSoftware.SerialToMidi.midi import Midi
+from PythonSoftware.SerialToMidi.RunningThreads.serialRunner import Worker
 
 
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super().__init__()
 
-        self.worker = None
+        # globale Variablen
+        self.serialWorker = None
+        self.midiWorker = None
+        self.midiPort = None
+        self.midi = None
+
         self.setWindowTitle("Serial To Midi")
         self.setMinimumWidth(500)
 
@@ -37,7 +45,6 @@ class MainWindow(QMainWindow):
         self.startButton.clicked.connect(self.startButtonPressed)
         self.layout.addWidget(self.startButton)
 
-
         # Stop Button
         self.stopButton = QPushButton("Stop Encoding")
         self.stopButton.clicked.connect(self.stopButtonPress)
@@ -54,12 +61,17 @@ class MainWindow(QMainWindow):
         # Midi Port Selection
         self.setMidiPort = QComboBox()
         self.setMidiPort.addItems(midi.getOpenMidiPort())
+        self.setMidiPort.currentTextChanged.connect(self.midiPortChanged)
         self.layout.addWidget(self.setMidiPort)
 
         # Start Midi
         self.startMidi = QPushButton("Start Midi")
         self.startMidi.clicked.connect(self.startMidiClicked)
         self.layout.addWidget(self.startMidi)
+
+        self.stopMidi = QPushButton("Stop Midi")
+        self.stopMidi.clicked.connect(self.stopMidiButton)
+        self.layout.addWidget(self.stopMidi)
 
         # Input Debug Lable
         self.dataFromFader = QLabel("Input")
@@ -90,6 +102,8 @@ class MainWindow(QMainWindow):
         thread_count = self.threadpool.maxThreadCount()
         print(f"Multithreading with maximum {thread_count} threads")
 
+# --------------- multi threading -----------------
+    # Starts the Serial Connection
     def startButtonPressed(self):
 
         # If this returns False the Serial Port is not found
@@ -98,23 +112,18 @@ class MainWindow(QMainWindow):
         if usedSetup is False:
             return
 
-        self.worker = Worker(usedSetup)
-        self.worker.signals.finished.connect(self.thread_complete)
-        self.worker.signals.progress.connect(self.progress_fn)
-        self.threadpool.start(self.worker)
-
-    def setMidiPortSelection(self, s):
-        print(s)
-        self.comPort = s
+        self.serialWorker = Worker(usedSetup)
+        self.serialWorker.signals.progress.connect(self.progress_fn)
+        self.threadpool.start(self.serialWorker)
 
     # Stopps the running Serial Connection
     def stopButtonPress(self):
-        if self.worker:
-            self.worker.kill()
+        if self.serialWorker:
+            self.serialWorker.kill()
         else:
             print("No thread started")
 
-    # Verbindung zu Signals für das GUI
+     # Verbindung zu Signals für das GUI
     def progress_fn(self, n):
         n = n.replace("b'", "")
         n = n.replace("\\r\\n'", "")
@@ -126,15 +135,46 @@ class MainWindow(QMainWindow):
                 self.faderList[x].updateData(round(int(split[x]), -1))  # runden auf nächsten 10
                 self.dataFromFader.setText(str(n))
 
-    def thread_complete(self):
-        print("THREAD COMPLETE!")
-
+    # Starting Midi Thread
     def startMidiClicked(self):
-        print("Starting Midi")
+        if self.midiPort is None:
+            print("No Midi port defined")
+            return
 
+        print("Starting Midi")
+        self.midi = Midi(self.midiPort)
+
+        self.midiWorker = MidiWorker()
+        self.midiWorker.signals.progress.connect(self.progressFnMidi)
+        self.threadpool.start(self.midiWorker)
+
+    # Stopps Midi Thread
+    def stopMidiButton(self):
+        if self.midiWorker:
+            self.midiWorker.kill()
+            self.midi.closePort()
+        else:
+            print("No thread started")
+
+    # Midi Thread Connection zu GUI
+    def progressFnMidi(self, n):
+        print(n)
+
+# ------------- Others -----------------------
+
+    def setMidiPortSelection(self, s):
+        print(s)
+        self.comPort = s
+
+    def midiPortChanged(self, s):
+        self.midiPort = s
+
+    def closeEvent(self, event):
+        self.stopButtonPress()
+        self.stopMidiButton()
+        print("close")
 
 app = QApplication(sys.argv)
-
 window = MainWindow()
 window.show()
 

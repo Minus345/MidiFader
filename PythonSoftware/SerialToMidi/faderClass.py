@@ -7,6 +7,9 @@ class Fader:
     def __init__(self,name,placeIntoElement):
         self._layout = QVBoxLayout()
 
+        self.midiNote = 0
+        self.midiVelocity = 0
+
         self._name = name
 
         self._nameLable = QLabel(str(self._name))
@@ -32,4 +35,3 @@ class Fader:
     def buttonClick(self):
         self.w = FaderMenu(self._name)
         self.w.show()
-

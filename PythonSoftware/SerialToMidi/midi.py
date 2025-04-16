@@ -1,15 +1,17 @@
 from time import sleep
 
 import mido
+class Midi:
+    def __init__(self,port):
+        self.port = mido.open_output(port)
+        self.running = True
 
-def midi():
-    print(mido.get_output_names())
-    port = mido.open_output('midi 2')
-    while True:
-        #sleep(1)
-        x = input("a")
-        msg = mido.Message('note_on', note=60, velocity=int(x))
-        port.send(msg)
+    def sendMid(self,note,velocity):
+        self.port.send(note,velocity)
+
+    def closePort(self):
+       self.port.close()
+
 
 def getOpenMidiPort():
     return mido.get_output_names()
