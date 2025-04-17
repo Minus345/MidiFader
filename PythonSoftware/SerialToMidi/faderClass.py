@@ -10,9 +10,7 @@ class Fader:
 
         self.mainWindow = mainWindow
 
-        self.midiNote = 0
-        self.midiVelocity = 0
-
+        self.midiNote = int(name)
         self._name = name
 
         self._nameLable = QLabel(str(self._name))
