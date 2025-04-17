@@ -23,6 +23,8 @@ class Worker(QRunnable):
         self.faderStorage = [FaderData] * 12
         for x in range(12):
             self.faderStorage[x] = FaderData(x)
+            self.faderStorage[x].setMidiNote(faders[x].midiNote)
+            print(x, "|", faders[x].midiNote)
 
         self.signals = WorkerSignals()
         self.is_killed = False

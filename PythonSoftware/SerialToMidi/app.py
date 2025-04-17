@@ -12,7 +12,6 @@ from PythonSoftware.SerialToMidi.faderClass import Fader
 from PythonSoftware.SerialToMidi.midi import Midi
 from PythonSoftware.SerialToMidi.RunningThreads.serialRunner import Worker
 
-
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -69,7 +68,7 @@ class MainWindow(QMainWindow):
         self.layout2 = QHBoxLayout()
 
         for x in range(12):
-            self.faderList[x] = Fader(x, self.layout2)
+            self.faderList[x] = Fader(x, self.layout2,self)
 
         self.faderUiElement = QWidget()
         self.faderUiElement.setLayout(self.layout2)
