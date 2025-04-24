@@ -1,7 +1,7 @@
 import sys
 
 from PyQt6.QtCore import QThreadPool
-from PythonSoftware.SerialToMidi import midi, settingsHandler
+from PythonSoftware.SerialToMidi import midi, saveHandler
 from PythonSoftware.SerialToMidi.SerialLink import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, \
     QHBoxLayout, QComboBox
@@ -81,6 +81,10 @@ class MainWindow(QMainWindow):
         self.saveButton.clicked.connect(self.saveButtonPressed)
         self.layout.addWidget(self.saveButton)
 
+        self.loadButton = QPushButton("Load Config")
+        self.loadButton.clicked.connect(self.loadButtonPressed)
+        self.layout.addWidget(self.loadButton)
+
         self.maineUiElement = QWidget()
         self.maineUiElement.setLayout(self.layout)
         self.setCentralWidget(self.maineUiElement)
@@ -132,7 +136,10 @@ class MainWindow(QMainWindow):
         self.midiPort = s
 
     def saveButtonPressed(self):
-        settingsHandler.saveFaderToFile(self)
+        saveHandler.saveFaderToFile(self)
+
+    def loadButtonPressed(self):
+        saveHandler.loadFaderFromFile(self)
 
     def closeEvent(self, event):
         self.stopButtonPress()
