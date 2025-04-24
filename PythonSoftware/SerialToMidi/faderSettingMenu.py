@@ -12,7 +12,7 @@ class FaderMenu(QWidget):
         self.setMinimumWidth(300)
         self.setMinimumHeight(150)
 
-        self.midiNoteUserInput = mainWindow.faderList[self.faderNumber].midiNote
+        self.midiNoteUserInput = mainWindow.faderList[self.faderNumber].faderObjekt.midiNote
 
         layout = QVBoxLayout()
 
@@ -62,4 +62,4 @@ class FaderMenu(QWidget):
 
     def saveSettings(self):
         print(self.midiNoteUserInput)
-        self.mainWindow.faderList[self.faderNumber].midiNote = self.midiNoteUserInput
+        self.mainWindow.faderList[self.faderNumber].faderObjekt.midiNote = self.midiNoteUserInput

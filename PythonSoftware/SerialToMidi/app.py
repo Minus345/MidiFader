@@ -1,16 +1,15 @@
 import sys
 
 from PyQt6.QtCore import QThreadPool
-
-from PythonSoftware.SerialToMidi import midi
+from PythonSoftware.SerialToMidi import midi, settingsHandler
 from PythonSoftware.SerialToMidi.SerialLink import serialInput
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget, \
     QHBoxLayout, QComboBox
-
 from PythonSoftware.SerialToMidi.SerialLink.serialPortDetection import serial_ports
-from PythonSoftware.SerialToMidi.faderClass import Fader
+from PythonSoftware.SerialToMidi.Fader.faderClassGui import Fader
 from PythonSoftware.SerialToMidi.midi import Midi
 from PythonSoftware.SerialToMidi.RunningThreads.serialRunner import Worker
+
 
 class MainWindow(QMainWindow):
 
@@ -21,6 +20,7 @@ class MainWindow(QMainWindow):
         self.serialWorker = None
         self.midiPort = None
         self.midi = None
+        self.faderCount = 8
 
         self.setWindowTitle("Serial To Midi")
         self.setMinimumWidth(500)
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         self.layout2 = QHBoxLayout()
 
         for x in range(12):
-            self.faderList[x] = Fader(x, self.layout2,self)
+            self.faderList[x] = Fader(x, self.layout2, self)
 
         self.faderUiElement = QWidget()
         self.faderUiElement.setLayout(self.layout2)
@@ -76,6 +76,10 @@ class MainWindow(QMainWindow):
         # -----------------------
 
         self.layout.addWidget(self.faderUiElement)
+
+        self.saveButton = QPushButton("Save Config")
+        self.saveButton.clicked.connect(self.saveButtonPressed)
+        self.layout.addWidget(self.saveButton)
 
         self.maineUiElement = QWidget()
         self.maineUiElement.setLayout(self.layout)
@@ -126,6 +130,9 @@ class MainWindow(QMainWindow):
 
     def midiPortChanged(self, s):
         self.midiPort = s
+
+    def saveButtonPressed(self):
+        settingsHandler.saveFaderToFile(self)
 
     def closeEvent(self, event):
         self.stopButtonPress()

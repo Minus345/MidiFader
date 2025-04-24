@@ -41,7 +41,7 @@ class Worker(QRunnable):
                     v = round(((int(self.faders[x].data)) / 1024) * 127)
 
                     if v != oldFaderData[x]:
-                        self.midi.sendMid(self.faders[x].midiNote, v)
+                        self.midi.sendMid(self.faders[x].faderObjekt.midiNote, v)
 
             for x in range(12):
                 oldFaderData[x] = round(((int(self.faders[x].data)) / 1024) * 127)

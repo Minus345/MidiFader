@@ -1,6 +1,6 @@
-from PyQt6 import QtGui
 from PyQt6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget, QStyle
 
+from PythonSoftware.SerialToMidi.Fader.faderClassData import FaderData
 from PythonSoftware.SerialToMidi.faderSettingMenu import FaderMenu
 
 
@@ -9,11 +9,9 @@ class Fader:
         layout = QVBoxLayout()
 
         self.mainWindow = mainWindow
+        self.faderObjekt = FaderData(name)
 
-        self.midiNote = int(name)
-        self._name = name
-
-        self._nameLable = QLabel(str(self._name))
+        self._nameLable = QLabel(str(self.faderObjekt.name))
         self._nameLable.setStyleSheet("background-color: yellow;")
         layout.addWidget(self._nameLable)
 
@@ -39,5 +37,5 @@ class Fader:
         self._dataDisplay.setText(str(data))
 
     def buttonClick(self):
-        self.w = FaderMenu(self._name, self.mainWindow)
+        self.w = FaderMenu(self.faderObjekt.name, self.mainWindow)
         self.w.show()
